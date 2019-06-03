@@ -13,10 +13,20 @@ or
 Install pip if you haven't already, as we will be using pip to install the Python libraries. To check whether or not you have pip
 `pip --version` or `pip3 --version`.
 
-Install keras, numpy and scipy using pip
+Install numpy and scipy using `pip` or `pip3`
 
 `pip install numpy`
 
 `pip install scipy`
 
+Install Keras with TensorFlow backend:
+
+1. Install tensorflow
+
+`pip install tensorflow`
+
+then
+
 `pip install keras`
+
+
