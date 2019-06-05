@@ -31,7 +31,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Image stylization using a CNN')
 parser.add_argument('content_image', metavar='content', type=str, help='Path to the input content image')
 parser.add_argument('style_image', metavar='style', type=str, help='Path to the input style image')
-parser.add_argument('result_image_prefix', metavar='res_prefix', type=str, help='Path to the output generated image')
+parser.add_argument('generated_image', metavar='res_prefix', type=str, help='Path to the output generated image')
 parser.add_argument('--iterations', type=int, default=200, required=False, help='Number of iterations')
 parser.add_argument('--style_weight', type=float, default=0.9, required=False, help='Style weight')
 parser.add_argument('--content_weight', type=float, default=0.1, required=False, help='Content weight')
@@ -53,7 +53,7 @@ image_size = height * width
 # Path to images
 content_path = args.content_image
 style_path = args.style_image
-target_path = args.result_image_prefix
+target_path = args.generated_image
 
 # Layers in the CNN to be used for style and content
 content_layers = ['block2_conv2']
@@ -152,7 +152,6 @@ def total_loss(model, content_features, style_features, output_activations):
     for target_style, comb_style in zip(style_features, style_activations):
         style_loss += compute_style_loss(comb_style[0], target_style) * (1.0 / style_layers_count)
 
-    # return content_weight * content_loss + style_weight * style_loss
     return content_weight * content_loss + style_weight * style_loss, style_loss, content_loss
 
 # Write the contents of the generated image to an image file
@@ -224,19 +223,9 @@ if __name__ == '__main__':
     # Infinity so the coming iteration will be considered best loss and image
     best_loss, best_image = float('inf'), None
 
-     # VGG default normalization
-    norm_means = np.array([103.939, 116.779, 123.68])
-    min_vals = -norm_means
-    max_vals = 255 - norm_means 
-
     for i in range(iterations):
         # Run the function that calculates the gradient for gradient descent
         sess.run(opt)
-
-        # Make sure image values stays in the range of max-min value of VGG norm 
-        clipped = tf.clip_by_value(generated_image, min_vals, max_vals)
-        # assign the clipped value to the tensor stylized image
-        generated_image.assign(clipped)
 
         # Open the Tuple of tensors 
         total_loss, style_score, content_score = loss
