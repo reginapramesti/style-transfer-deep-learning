@@ -2,31 +2,29 @@
 
 ### Dependencies
 
-Install Python. Based on the Keras documentation. Keras is compatible with Python 2.7 or 3.6. Check your Python version:
+* Python 3.6
+* Keras
+* TensorFlow
+* NumPy
 
-```python3 --version```
+### Usage
 
-or
+`python3 style-transfer.py <content_image> <style_image> <output_filename> <optional_parameters>`
 
-```python --version```
+An example of this is:
 
-Install pip if you haven't already, as we will be using pip to install the Python libraries. To check whether or not you have pip
-`pip --version` or `pip3 --version`.
+`python3 style-transfer.py images/content/stata.jpg images/style/starry_night.jpg images/generated/starry_night_stata`
 
-Install numpy and scipy using `pip` or `pip3`
+The entire run takes about 30 mins to 1 hour depending on the image, the weights of the content and style loss, and the style layers used in the VGG19 CNN.
 
-`pip install numpy`
+### Optional Parameters
 
-`pip install scipy`
+We have provided the option to run the Python script with different parameters, such as:
 
-Install Keras with TensorFlow backend:
+`--iterations <number of iterations>: this is the maximum number of iterations that the gradient descent will go through before the script ends`
 
-1. Install tensorflow
+`--style_weight <style weight value>: this is the weight associated with the style loss as part of the total loss function`
 
-`pip install tensorflow`
-
-then
-
-`pip install keras`
+`--content_weight <content weight value>: this is the weight associated with the content loss as part of the total loss function`
 
 
