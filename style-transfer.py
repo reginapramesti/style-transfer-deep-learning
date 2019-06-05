@@ -33,8 +33,8 @@ parser.add_argument('content_image', metavar='content', type=str, help='Path to 
 parser.add_argument('style_image', metavar='style', type=str, help='Path to the input style image')
 parser.add_argument('result_image_prefix', metavar='res_prefix', type=str, help='Path to the output generated image')
 parser.add_argument('--iterations', type=int, default=200, required=False, help='Number of iterations')
-parser.add_argument('--content_weight', type=float, default=0.1, required=False, help='Content weight')
 parser.add_argument('--style_weight', type=float, default=0.9, required=False, help='Style weight')
+parser.add_argument('--content_weight', type=float, default=0.1, required=False, help='Content weight')
 
 args = parser.parse_args()
 
@@ -58,6 +58,8 @@ target_path = args.result_image_prefix
 # Layers in the CNN to be used for style and content
 content_layers = ['block2_conv2']
 style_layers = ['block1_conv2', 'block2_conv2', 'block3_conv3', 'block4_conv3', 'block5_conv3']
+# These are the style layers used in the original paper
+# style_layers = ['block1_conv1', 'block2_conv1', 'block3_conv1', 'block4_conv1', 'block5_conv1']
 
 content_layers_count = len(content_layers)
 style_layers_count = len(style_layers) 
@@ -153,34 +155,6 @@ def total_loss(model, content_features, style_features, output_activations):
     # return content_weight * content_loss + style_weight * style_loss
     return content_weight * content_loss + style_weight * style_loss, style_loss, content_loss
 
-def compute_loss(model, loss_weights, generated_output_activations, gram_style_features, content_features, num_content_layers, num_style_layers):
-
-    generated_content_activations = generated_output_activations[:num_content_layers]
-    generated_style_activations   = generated_output_activations[num_content_layers:]
-
-    style_weight, content_weight = loss_weights
-    
-    style_score = 0
-    content_score = 0
-
-    # Accumulate style losses from all layers
-    # Here, we equally weight each contribution of each loss layer
-    weight_per_style_layer = 1.0 / float(num_style_layers)
-    for target_style, comb_style in zip(gram_style_features, generated_style_activations):
-        temp = compute_style_loss(comb_style[0], target_style)
-        style_score += weight_per_style_layer * temp
-        
-    # Accumulate content losses from all layers 
-    weight_per_content_layer = 1.0 / float(num_content_layers)
-    for target_content, comb_content in zip(content_features, generated_content_activations):
-        temp = compute_content_loss(comb_content[0], target_content)
-        content_score += weight_per_content_layer* temp
-
-    # Get total loss
-    loss = style_weight*style_score + content_weight*content_score 
-
-    return loss, style_score, content_score
-
 # Write the contents of the generated image to an image file
 def write_image(filename, generated):
     # Flip the channels back to RGB
@@ -239,7 +213,7 @@ if __name__ == '__main__':
     loss = total_loss(model, content_features, style_features, generated_outputs)
     opt = tf.train.AdamOptimizer(learning_rate=9, beta1=0.9, epsilon=1e-1).minimize( loss[0], var_list = [generated_image])
 
-    # # Initialise variables 
+    ## Initialise variables 
     sess.run(tf.global_variables_initializer())
     sess.run(generated_image.initializer)
 
@@ -250,10 +224,19 @@ if __name__ == '__main__':
     # Infinity so the coming iteration will be considered best loss and image
     best_loss, best_image = float('inf'), None
 
+     # VGG default normalization
+    norm_means = np.array([103.939, 116.779, 123.68])
+    min_vals = -norm_means
+    max_vals = 255 - norm_means 
 
     for i in range(iterations):
         # Run the function that calculates the gradient for gradient descent
         sess.run(opt)
+
+        # Make sure image values stays in the range of max-min value of VGG norm 
+        clipped = tf.clip_by_value(generated_image, min_vals, max_vals)
+        # assign the clipped value to the tensor stylized image
+        generated_image.assign(clipped)
 
         # Open the Tuple of tensors 
         total_loss, style_score, content_score = loss
