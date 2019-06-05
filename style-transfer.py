@@ -28,10 +28,11 @@ from PIL import Image
 import numpy as np
 import argparse
 
+# Argument handler
 parser = argparse.ArgumentParser(description='Image stylization using a CNN')
 parser.add_argument('content_image', metavar='content', type=str, help='Path to the input content image')
 parser.add_argument('style_image', metavar='style', type=str, help='Path to the input style image')
-parser.add_argument('generated_image', metavar='res_prefix', type=str, help='Path to the output generated image')
+parser.add_argument('generated_image', metavar='output', type=str, help='Path to the output generated image')
 parser.add_argument('--iterations', type=int, default=200, required=False, help='Number of iterations')
 parser.add_argument('--style_weight', type=float, default=0.9, required=False, help='Style weight')
 parser.add_argument('--content_weight', type=float, default=0.1, required=False, help='Content weight')
